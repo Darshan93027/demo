@@ -1,11 +1,122 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>50-Day Countdown</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background-color: #f4f4f4;
+    }
+
+    .container {
+      width: 80%;
+      max-width: 600px;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .day {
+      width: 100%;
+      padding: 20px 0;
+      background-color: #4CAF50;
+      color: #fff;
+      text-align: center;
+      font-size: 18px;
+      font-weight: bold;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .day.finished {
+      background-color: #d3d3d3;
+      color: #888;
+      text-decoration: line-through;
+      cursor: default;
+    }
+
+    .reset-btn {
+      padding: 10px 20px;
+      background-color: #ff3333;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
-    <h1>this is index page </h1>
+  <div class="container">
+    <!-- JavaScript will populate days here -->
+  </div>
+  <button class="reset-btn" onclick="resetCountdown()">Reset Countdown</button>
+
+  <script>
+    const container = document.querySelector('.container');
+    let finishedDays = JSON.parse(localStorage.getItem('finishedDays')) || [];
+    let lastCutTimestamp = localStorage.getItem('lastCutTimestamp');
+
+    // Create 50 days
+    for (let i = 1; i <= 50; i++) {
+      const day = document.createElement('div');
+      day.classList.add('day');
+      day.textContent = `Day ${i}`;
+
+      // Check if this day is already marked as finished
+      if (finishedDays.includes(i)) {
+        day.classList.add('finished');
+      }
+
+      // Check if 24 hours have passed since the last cut day
+      const canCutDay = () => {
+        const currentTime = Date.now();
+        return !lastCutTimestamp || (currentTime - lastCutTimestamp >= 24 * 60 * 60 * 1000);
+      };
+
+      // Function to mark a day as finished and update the timestamp
+      const markAsFinished = () => {
+        if (!day.classList.contains('finished') && canCutDay()) {
+          day.classList.add('finished');
+          finishedDays.push(i); // Add this day to the finished days array
+          localStorage.setItem('finishedDays', JSON.stringify(finishedDays));
+
+          // Update last cut timestamp and store it
+          lastCutTimestamp = Date.now();
+          localStorage.setItem('lastCutTimestamp', lastCutTimestamp);
+
+          day.removeEventListener('click', markAsFinished); // Remove event listener
+        } else {
+          alert('You can only cut one day every 24 hours!');
+        }
+      };
+
+      day.addEventListener('click', markAsFinished);
+
+      container.appendChild(day);
+    }
+
+    // Reset function to clear storage and refresh the page
+    function resetCountdown() {
+      localStorage.removeItem('finishedDays');
+      localStorage.removeItem('lastCutTimestamp');
+      location.reload();
+    }
+  </script>
 </body>
 </html>
